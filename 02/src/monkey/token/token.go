@@ -9,6 +9,7 @@ const (
 	// Identifiers + literals
 	IDENT = "IDENT" // add, foobar, x, y, ...
 	INT   = "INT"   // 1343456
+	FLOAT = "FLOAT"
 
 	// Operators
 	ASSIGN   = "="
@@ -63,4 +64,21 @@ func LookupIdent(ident string) TokenType {
 		return tok
 	}
 	return IDENT
+}
+
+var kwreversed = map[TokenType]string{
+	FUNCTION: "fn",
+	LET:      "let",
+	TRUE:     "true",
+	FALSE:    "false",
+	IF:       "if",
+	ELSE:     "else",
+	RETURN:   "return",
+}
+
+func LookupKeywords(t TokenType) string {
+	if s, sok := kwreversed[t]; sok {
+		return s
+	}
+	return "unknown"
 }

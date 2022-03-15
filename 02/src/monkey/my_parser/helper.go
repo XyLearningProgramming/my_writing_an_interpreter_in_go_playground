@@ -34,3 +34,21 @@ func (p *Parser) appendTokenError(expect token.TokenType, value token.Token) {
 		),
 	)
 }
+
+func (p *Parser) appendExprFuncError(value token.Token, isPrefix bool) {
+	if isPrefix {
+		p.appendError(
+			fmt.Sprintf(
+				"no prefix parse func: token type: %s: literal: %s",
+				string(value.Type), value.Literal,
+			),
+		)
+	} else {
+		p.appendError(
+			fmt.Sprintf(
+				"no infix parse func: token type: %s: literal: %s",
+				string(value.Type), value.Literal,
+			),
+		)
+	}
+}

@@ -11,3 +11,6 @@
 3. Inline if sentence as an **expression**? How to implement? 
     - Example: `1?true:-1`
     - Structure: `<EXPR> ? <EXPR> : <EXPR>`
+
+Done:
+    - `Lexer`: parse float && int type

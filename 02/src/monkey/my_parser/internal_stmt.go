@@ -12,7 +12,7 @@ func (p *Parser) parseStatement() my_ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -47,6 +47,18 @@ func (p *Parser) parseReturnStatement() *my_ast.ReturnStatement {
 	p.nextToken()
 	// TODO: parse expressions from curToken
 	for !p.isCurToken(token.SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
+}
+
+func (p *Parser) parseExpressionStatement() *my_ast.ExpressionStatement {
+	stmt := &my_ast.ExpressionStatement{
+		Expression: p.parseExpression(LOWEST),
+	}
+	// NOTE: if next token is ;, then consume it;
+	// in repl, expressions without ; is also legal, so no error here;
+	if p.isPeekToken(token.SEMICOLON) {
 		p.nextToken()
 	}
 	return stmt
