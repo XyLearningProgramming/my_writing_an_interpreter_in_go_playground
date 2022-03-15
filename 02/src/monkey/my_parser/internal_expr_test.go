@@ -92,9 +92,10 @@ func TestOperatorPrecedence(t *testing.T) {
 		input  string
 		expect string
 	}{
-		{"-a*b", "(-(a*b))"},
+		{"-b*c", "(-(b*c))"},
 		{"a*b-c", "((a*b)-c)"},
-		// {"a*( b -c)", "(a*(b-c))"},
+		{"!-c", "(!(-c))"},
+		{"-1+2", "((-1)+2)"},
 	}
 	for _, test := range tests {
 		l := lexer.New(test.input)
