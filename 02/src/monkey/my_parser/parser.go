@@ -32,6 +32,11 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.TRUE, p.parseBooleanLiteral)
+	p.registerPrefix(token.FALSE, p.parseBooleanLiteral)
+	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.FUNCTION, p.parseFunction)
 
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -57,7 +62,6 @@ func (p *Parser) Parse() *my_ast.Program {
 		if stmt != nil {
 			prog.Statements = append(prog.Statements, stmt)
 		}
-		// Error?
 		p.nextToken()
 	}
 	return prog

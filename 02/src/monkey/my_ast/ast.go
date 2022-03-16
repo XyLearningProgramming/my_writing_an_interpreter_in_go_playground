@@ -122,7 +122,7 @@ func (e *ExpressionStatement) String() string {
 	if e.Expression == nil {
 		return ""
 	}
-	return e.Expression.String()
+	return e.Expression.String() + ";"
 }
 
 // expressions
@@ -141,31 +141,31 @@ func (i *Identifier) String() string {
 	return i.Value
 }
 
-type IntegerLiteral struct {
+type Integer struct {
 	Value uint64
 }
 
-func (i *IntegerLiteral) expressionNode() {}
+func (i *Integer) expressionNode() {}
 
-func (i *IntegerLiteral) DebugString() string {
+func (i *Integer) DebugString() string {
 	return strconv.FormatUint(i.Value, 10)
 }
 
-func (i *IntegerLiteral) String() string {
+func (i *Integer) String() string {
 	return strconv.FormatUint(i.Value, 10)
 }
 
-type FloatLiteral struct {
+type Float struct {
 	Value float64
 }
 
-func (f *FloatLiteral) expressionNode() {}
+func (f *Float) expressionNode() {}
 
-func (f *FloatLiteral) DebugString() string {
+func (f *Float) DebugString() string {
 	return strconv.FormatFloat(f.Value, 'f', -1, 64)
 }
 
-func (f *FloatLiteral) String() string {
+func (f *Float) String() string {
 	return strconv.FormatFloat(f.Value, 'f', -1, 64)
 }
 
@@ -226,5 +226,94 @@ func (i *InfixExpression) String() string {
 	sb.WriteString(string(i.Operator))
 	sb.WriteString(i.Right.String())
 	sb.WriteRune(')')
+	return sb.String()
+}
+
+type Boolean struct {
+	Value bool
+}
+
+func (b *Boolean) expressionNode() {}
+
+func (b *Boolean) DebugString() string {
+	return strconv.FormatBool(b.Value)
+}
+
+func (b *Boolean) String() string {
+	return strconv.FormatBool(b.Value)
+}
+
+type BlockStatement struct {
+	Statements []Statement
+}
+
+func (b *BlockStatement) statementNode() {}
+
+func (b *BlockStatement) DebugString() string {
+	return token.LBRACE
+}
+
+func (b *BlockStatement) String() string {
+	sb := strings.Builder{}
+	sb.WriteRune('{')
+	for _, stmt := range b.Statements {
+		sb.WriteString(stmt.String())
+	}
+	sb.WriteRune('}')
+	return sb.String()
+}
+
+type IfExpression struct {
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func (i *IfExpression) expressionNode() {}
+
+func (i *IfExpression) DebugString() string {
+	return token.IF
+}
+
+func (i *IfExpression) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("if")
+	sb.WriteString("(")
+	sb.WriteString(i.Condition.String())
+	sb.WriteString(")")
+	sb.WriteString(i.Consequence.String())
+	if i.Alternative != nil {
+		sb.WriteString("else")
+		sb.WriteString(i.Alternative.String())
+	}
+	return sb.String()
+}
+
+type Function struct {
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (f *Function) expressionNode() {}
+
+func (f *Function) DebugString() string {
+	if len(f.Parameters) > 0 {
+		return f.Parameters[0].DebugString()
+	}
+	return ""
+}
+
+func (f *Function) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("fn")
+	sb.WriteRune('(')
+	for idx, p := range f.Parameters {
+		sb.WriteString(p.String())
+		if idx != len(f.Parameters)-1 {
+			sb.WriteRune(',')
+		}
+	}
+	sb.WriteRune(')')
+	sb.WriteString(f.Body.String())
 	return sb.String()
 }

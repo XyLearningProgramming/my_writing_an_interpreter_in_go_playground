@@ -5,6 +5,7 @@ import (
 	"monkey/token"
 )
 
+// parseStatement parse until curToken is ; or EOF
 func (p *Parser) parseStatement() my_ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
@@ -33,8 +34,9 @@ func (p *Parser) parseLetStatement() *my_ast.LetStatement {
 		return nil
 	}
 	p.nextToken()
-	// TODO: parse following expressions from peekToken
-	for !p.isCurToken(token.SEMICOLON) {
+	p.nextToken()
+	stmt.Value = p.parseExpression(LOWEST)
+	if p.isPeekToken(token.SEMICOLON) {
 		p.nextToken()
 	}
 	return stmt
@@ -45,8 +47,8 @@ func (p *Parser) parseLetStatement() *my_ast.LetStatement {
 func (p *Parser) parseReturnStatement() *my_ast.ReturnStatement {
 	stmt := &my_ast.ReturnStatement{}
 	p.nextToken()
-	// TODO: parse expressions from curToken
-	for !p.isCurToken(token.SEMICOLON) {
+	stmt.Value = p.parseExpression(LOWEST)
+	if p.isPeekToken(token.SEMICOLON) {
 		p.nextToken()
 	}
 	return stmt
@@ -62,4 +64,20 @@ func (p *Parser) parseExpressionStatement() *my_ast.ExpressionStatement {
 		p.nextToken()
 	}
 	return stmt
+}
+
+// parseBlockStatement: only called by parsingIfExpression()
+func (p *Parser) parseBlockStatement() *my_ast.BlockStatement {
+	if !p.isCurToken(token.LBRACE) {
+		p.appendTokenError(token.LBRACE, p.curToken)
+		return nil
+	}
+	p.nextToken()
+	bs := &my_ast.BlockStatement{}
+	for !p.isCurToken(token.RBRACE) && !p.isCurToken(token.EOF) {
+		bs.Statements = append(bs.Statements, p.parseStatement())
+		p.nextToken()
+	}
+	// TODO: what if an empty block statement?
+	return bs
 }
