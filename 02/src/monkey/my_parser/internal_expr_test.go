@@ -177,3 +177,11 @@ func TestParseFunctionExpression(t *testing.T) {
 	}
 	testStringedStatements(t, tests)
 }
+
+func TestParseCallExpression(t *testing.T) {
+	tests := []TestWithExpect{
+		{"fn(x,y)\n{x+y;}(1,\ta)", "fn(x,y){(x+y);}(1,a);"},
+		{"add(1,2* 3, 4 + 5,add(1+2))", "add(1,(2*3),(4+5),add((1+2)));"},
+	}
+	testStringedStatements(t, tests)
+}

@@ -205,6 +205,7 @@ const (
 	INOP_GT       InfixOperator = token.GT
 	INOP_EQ       InfixOperator = token.EQ
 	INOP_NOT_EQ   InfixOperator = token.NOT_EQ
+	INOP_CALL InfixOperator = token.LPAREN
 )
 
 type InfixExpression struct {
@@ -315,5 +316,30 @@ func (f *Function) String() string {
 	}
 	sb.WriteRune(')')
 	sb.WriteString(f.Body.String())
+	return sb.String()
+}
+
+type CallExpression struct {
+	Function  Expression // Identifier or Function
+	Arguments []Expression
+}
+
+func (c *CallExpression) expressionNode() {}
+
+func (c *CallExpression) DebugString() string {
+	return c.Function.DebugString()
+}
+
+func (c *CallExpression) String() string {
+	sb := strings.Builder{}
+	sb.WriteString(c.Function.String())
+	sb.WriteRune('(')
+	for idx, a := range c.Arguments {
+		sb.WriteString(a.String())
+		if idx != len(c.Arguments)-1 {
+			sb.WriteRune(',')
+		}
+	}
+	sb.WriteRune(')')
 	return sb.String()
 }

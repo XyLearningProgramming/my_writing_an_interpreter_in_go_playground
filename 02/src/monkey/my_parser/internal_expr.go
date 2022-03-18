@@ -29,6 +29,7 @@ var InfixOperatorToPrecedences = map[my_ast.InfixOperator]PrecedenceLevel{
 	my_ast.INOP_GT:       LESSGREATER,
 	my_ast.INOP_EQ:       EQUALS,
 	my_ast.INOP_NOT_EQ:   EQUALS,
+	my_ast.INOP_CALL:     CALL,
 }
 
 func tokenPrecedenceLevel(t *token.Token) PrecedenceLevel {
@@ -193,8 +194,8 @@ func (p *Parser) parseFunctionParameters() []*my_ast.Identifier {
 		p.appendTokenError(token.LPAREN, p.curToken)
 		return nil
 	}
-	params := []*my_ast.Identifier{}
 	p.nextToken()
+	params := []*my_ast.Identifier{}
 	if p.isPeekToken(token.RPAREN) {
 		p.nextToken()
 		return params
@@ -207,4 +208,32 @@ func (p *Parser) parseFunctionParameters() []*my_ast.Identifier {
 	}
 	p.nextToken()
 	return params
+}
+
+func (p *Parser) parseCallExpression(leftFunc my_ast.Expression) my_ast.Expression {
+	return &my_ast.CallExpression{Function: leftFunc, Arguments: p.parseCallArguments()}
+}
+
+func (p *Parser) parseCallArguments() []my_ast.Expression {
+	if !p.isCurToken(token.LPAREN) {
+		p.appendTokenError(token.LPAREN, p.curToken)
+		return nil
+	}
+	p.nextToken()
+	args := []my_ast.Expression{}
+	if p.isCurToken(token.RPAREN) {
+		return args
+	}
+	args = append(args, p.parseExpression(LOWEST))
+	for p.isPeekToken(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+	if !p.isPeekToken(token.RPAREN) {
+		p.appendTokenError(token.RPAREN, p.curToken)
+		return nil
+	}
+	p.nextToken()
+	return args
 }
