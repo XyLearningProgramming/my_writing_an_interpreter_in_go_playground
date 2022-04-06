@@ -4,10 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"monkey/evaluator"
 	"monkey/lexer"
-	"monkey/object"
-	"monkey/parser"
+
+	evaluator "monkey/my_evaluator"
+	parser "monkey/my_parser"
+
+	// "monkey/evaluator"
+	// "monkey/parser"
+	object "monkey/my_object"
 )
 
 const PROMPT = ">> "
@@ -27,17 +31,28 @@ func Start(in io.Reader, out io.Writer) {
 		l := lexer.New(line)
 		p := parser.New(l)
 
-		program := p.ParseProgram()
-		if len(p.Errors()) != 0 {
-			printParserErrors(out, p.Errors())
+		program := p.Parse()
+		if p.Error() != nil {
+			printParserErrors(out, []string{p.Error().Error()})
 			continue
 		}
 
 		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
-			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, evaluated.String())
 			io.WriteString(out, "\n")
 		}
+		// program := p.ParseProgram()
+		// if p.Errors() != nil {
+		// 	printParserErrors(out, p.Errors())
+		// 	continue
+		// }
+
+		// evaluated := evaluator.Eval(program, env)
+		// if evaluated != nil {
+		// 	io.WriteString(out, evaluated.Inspect())
+		// 	io.WriteString(out, "\n")
+		// }
 	}
 }
 
