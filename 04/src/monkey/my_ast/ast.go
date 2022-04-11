@@ -411,3 +411,20 @@ func (aie *IndexExpression) String() string {
 }
 
 func (aie *IndexExpression) expressionNode() {}
+
+type HashExpression struct {
+	Pairs map[Expression]Expression
+	Keys  []Expression
+}
+
+func (he *HashExpression) DebugString() string { return he.String() }
+
+func (he *HashExpression) String() string {
+	pairs := []string{}
+	for _, k := range he.Keys {
+		pairs = append(pairs, k.String()+":"+he.Pairs[k].String())
+	}
+	return "{" + strings.Join(pairs, ",") + "}"
+}
+
+func (he *HashExpression) expressionNode() {}

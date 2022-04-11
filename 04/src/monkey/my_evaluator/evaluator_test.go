@@ -221,6 +221,40 @@ func TestArrayIndexExpression(t *testing.T) {
 	testCaseWithStruct(t, tests)
 }
 
+func TestHashExpression(t *testing.T) {
+	input := `let two="three"; {"one": 10-9, two: 1+1, three: 3, 4: 4, true:5, false:6, 7.1: 7}`
+	evaluated := testEval(t, input)
+	hashObj, hok := evaluated.(*my_object.Hash)
+	assert.True(t, hok)
+	expected := map[my_object.HashKey]int64{
+		(&my_object.String{Value: "one"}).HashKey():   1,
+		(&my_object.String{Value: "two"}).HashKey():   2,
+		(&my_object.String{Value: "three"}).HashKey(): 3,
+		(&my_object.Integer{Value: 4}).HashKey():      4,
+		(&my_object.Boolean{Value: true}).HashKey():   5,
+		(&my_object.Boolean{Value: false}).HashKey():  6,
+		(&my_object.Float{Value: 7.1}).HashKey():      7,
+	}
+	for ek, ev := range expected {
+		pair, ok := hashObj.Pairs[ek]
+		assert.True(t, ok, "pair: %+v", pair)
+		assert.EqualValues(t, ev, pair.Value.(*my_object.Integer).Value)
+	}
+}
+
+func TestHashIndexExpression(t *testing.T) {
+	tests := []*testCaseTyped{
+		{"{foo:5}[\"foo\"]", 5, intType},
+		{"{foo:5}[\"bar\"]", nil, nullType},
+		{"{}[\"bar\"]", nil, nullType},
+		{"{5:5}[5]", 5, intType},
+		{"{5.0:5}[5.0]", 5, intType},
+		{"{true:5}[true]", 5, intType},
+		{"{true:5}[fn(x){x}]", "key type not hashable: FUNCTION", errType},
+	}
+	testCaseWithStruct(t, tests)
+}
+
 func testCaseWithStruct(t *testing.T, tests []*testCaseTyped) {
 	for _, c := range tests {
 		evaluated := testEval(t, c.input)

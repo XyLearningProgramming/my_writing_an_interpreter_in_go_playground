@@ -226,3 +226,11 @@ func TestParseArrayIndexingExpression(t *testing.T) {
 	}
 	testStringedStatements(t, tests)
 }
+
+func TestParseMapExpression(t *testing.T) {
+	tests := []TestWithExpect{
+		{`{"one": 1, two: 2+1, 3: [1,2,3][:]}`, `{one:1,two:(2+1),3:([1,2,3][:])};`},
+		{"{}", "{};"},
+	}
+	testStringedStatements(t, tests)
+}

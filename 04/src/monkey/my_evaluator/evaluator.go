@@ -75,6 +75,8 @@ func Eval(node my_ast.Node, env *my_object.Environment) my_object.Object {
 			return left
 		}
 		return evalIndexExpression(left, node, env)
+	case *my_ast.HashExpression:
+		return evalHashExpression(node, env)
 	}
 	return newError("unknown node type: %s", node.String())
 }

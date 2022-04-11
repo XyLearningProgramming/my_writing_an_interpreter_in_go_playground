@@ -1,6 +1,7 @@
 package my_evaluator
 
 import (
+	"fmt"
 	"monkey/my_object"
 )
 
@@ -32,6 +33,15 @@ var builtins = map[string]*my_object.Builtin{
 			copy(newElements, args[0].(*my_object.Array).Elements)
 			newElements[len(args)] = args[1]
 			return &my_object.Array{Elements: newElements}
+		},
+	},
+	"put": {
+		Fn: func(args ...my_object.Object) my_object.Object {
+			fmt.Println()
+			for _, arg := range args {
+				fmt.Print(arg.String())
+			}
+			return nil
 		},
 	},
 }

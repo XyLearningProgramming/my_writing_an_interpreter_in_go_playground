@@ -350,3 +350,38 @@ func (p *Parser) parseIndexExpression(left my_ast.Expression) my_ast.Expression 
 	}
 	return exp
 }
+
+func (p *Parser) parseHashLiteral() my_ast.Expression {
+	hash := &my_ast.HashExpression{
+		Pairs: make(map[my_ast.Expression]my_ast.Expression),
+		Keys:  make([]my_ast.Expression, 0),
+	}
+	p.nextToken()
+	for !p.isCurToken(token.RBRACE) && !p.isCurToken(token.EOF) {
+		key := p.parseExpression(LOWEST)
+		if !p.isPeekToken(token.COLON) {
+			p.appendTokenError(token.COLON, p.peekToken)
+			return nil
+		}
+		p.nextToken()
+		p.nextToken()
+		value := p.parseExpression(LOWEST)
+		hash.Pairs[key] = value
+		hash.Keys = append(hash.Keys, key)
+		if !p.isPeekToken(token.RBRACE) && !p.isPeekToken(token.COMMA) {
+			p.appendError(
+				fmt.Sprintf("expecting token RBRACE or COMMA, but got %s with literal %s instead", string(p.peekToken.Type), p.peekToken.Literal),
+			)
+			return nil
+		}
+		if p.isPeekToken(token.COMMA) {
+			p.nextToken()
+		}
+		p.nextToken()
+	}
+	if !p.isCurToken(token.RBRACE) {
+		p.appendTokenError(token.RBRACE, p.peekToken)
+		return nil
+	}
+	return hash
+}

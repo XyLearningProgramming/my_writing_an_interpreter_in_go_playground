@@ -63,3 +63,23 @@ func testTokensWithInput(t *testing.T, input string, expects []*token.Token) {
 		assert.Equal(t, *exp, tok)
 	}
 }
+
+func TestMapToken(t *testing.T) {
+	input := `
+{"boo":'foo'}; {boo: true}
+`
+	expects := []*token.Token{
+		{Type: token.LBRACE, Literal: "{"},
+		{Type: token.STRING, Literal: "boo"},
+		{Type: token.COLON, Literal: ":"},
+		{Type: token.STRING, Literal: "foo"},
+		{Type: token.RBRACE, Literal: "}"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LBRACE, Literal: "{"},
+		{Type: token.IDENT, Literal: "boo"},
+		{Type: token.COLON, Literal: ":"},
+		{Type: token.TRUE, Literal: "true"},
+		{Type: token.RBRACE, Literal: "}"},
+	}
+	testTokensWithInput(t, input, expects)
+}

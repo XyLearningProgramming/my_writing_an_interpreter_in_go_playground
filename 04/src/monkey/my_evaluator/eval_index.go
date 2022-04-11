@@ -29,6 +29,8 @@ func evalIndexExpression(left my_object.Object, indexNode *my_ast.IndexExpressio
 
 	case *my_object.Array:
 		return evalArrayIndexExpression(left, indexNode, env)
+	case *my_object.Hash:
+		return evalHashIndexExpression(left, indexNode.StartIndex, env)
 	default:
 		return newError("index operator not supported: %s", left.Type())
 	}
@@ -117,4 +119,20 @@ func evalArrayIndexExpression(array *my_object.Array, indexNode *my_ast.IndexExp
 		return results
 	}
 	panic("unreachable path")
+}
+
+func evalHashIndexExpression(hash *my_object.Hash, index my_ast.Expression, env *my_object.Environment) my_object.Object {
+	indexObj := Eval(index, env)
+	if isError(indexObj) {
+		return indexObj
+	}
+	key, ok := indexObj.(my_object.HashableObject)
+	if !ok {
+		return newError("key type not hashable: %s", indexObj.Type())
+	}
+	pair, ok := hash.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+	return pair.Value
 }

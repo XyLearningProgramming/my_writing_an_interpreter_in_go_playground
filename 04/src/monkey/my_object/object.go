@@ -1,6 +1,9 @@
 package my_object
 
 import (
+	"fmt"
+	"hash/fnv"
+	"math"
 	"monkey/my_ast"
 	"strconv"
 	"strings"
@@ -20,11 +23,22 @@ const (
 	STRING_OBJ           = "STRING"
 	BUILTIN_OBJ          = "BUILTIN"
 	ARRAY_OBJ            = "ARRAY"
+	HASH_OBJ             = "HASH"
 )
 
 type Object interface {
 	Type() ObjectType
 	String() string
+}
+
+type HashKey struct {
+	Type  ObjectType
+	Value uint64
+}
+
+type HashableObject interface {
+	Object
+	HashKey() HashKey
 }
 
 type UnsignedInteger struct {
@@ -39,6 +53,10 @@ func (i *UnsignedInteger) String() string {
 	return strconv.FormatUint(i.Value, 10)
 }
 
+func (i *UnsignedInteger) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: i.Value}
+}
+
 type Integer struct {
 	Value int64
 }
@@ -49,6 +67,10 @@ func (i *Integer) Type() ObjectType {
 
 func (i *Integer) String() string {
 	return strconv.FormatInt(i.Value, 10)
+}
+
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
 }
 
 type Float struct {
@@ -63,6 +85,10 @@ func (f *Float) String() string {
 	return strconv.FormatFloat(f.Value, 'f', -1, 64)
 }
 
+func (f *Float) HashKey() HashKey {
+	return HashKey{Type: f.Type(), Value: math.Float64bits(f.Value)}
+}
+
 type Boolean struct {
 	Value bool
 }
@@ -75,11 +101,18 @@ func (b *Boolean) String() string {
 	return strconv.FormatBool(b.Value)
 }
 
+func (b *Boolean) HashKey() HashKey {
+	if b.Value {
+		return HashKey{Type: b.Type(), Value: 1}
+	}
+	return HashKey{Type: b.Type(), Value: 0}
+}
+
 type Null struct{}
 
 func (n *Null) Type() ObjectType { return NULL_OBJ }
 
-func (n *Null) String() string { return NULL_OBJ }
+func (n *Null) String() string { return "null" }
 
 type ReturnValue struct {
 	Value Object
@@ -131,6 +164,12 @@ func (s *String) String() string {
 	return s.Value
 }
 
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
 type BuiltinFunction func(args ...Object) Object
 
 type Builtin struct {
@@ -155,4 +194,22 @@ func (a *Array) String() string {
 		elements = append(elements, e.String())
 	}
 	return "[" + strings.Join(elements, ",") + "]"
+}
+
+type HashPair struct {
+	Key   Object
+	Value Object
+}
+type Hash struct {
+	Pairs map[HashKey]HashPair
+}
+
+func (h *Hash) Type() ObjectType { return HASH_OBJ }
+
+func (h *Hash) String() string {
+	pairs := []string{}
+	for _, pair := range h.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s:%s", pair.Key.String(), pair.Value.String()))
+	}
+	return "{" + strings.Join(pairs, ",") + "}"
 }
