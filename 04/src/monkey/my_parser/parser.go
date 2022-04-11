@@ -37,6 +37,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunction)
+	p.registerPrefix(token.STRING, p.parseStringExpression)
+	p.registerPrefix(token.LBRACKET, p.parseArrayExpression)
 
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -47,6 +49,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.EQ, p.parseInfixExpression)
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
+	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 
 	// lexer.NextToken() will continue to produce EOF if finished without error
 	p.nextToken()

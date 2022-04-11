@@ -21,6 +21,10 @@ const PROMPT = ">> "
 func Start(in io.Reader, out io.Writer) {
 	env := object.NewEnvironment()
 	con := console.NewConsole()
+	con.SetKeyDownHook('\x03', func(c *console.Console, s string) {
+		fmt.Fprintln(out, "keyboard interupt.")
+		os.Exit(0)
+	})
 	con.Init(func(c *console.Console, line string) {
 		switch line {
 		case "exit":
@@ -28,7 +32,6 @@ func Start(in io.Reader, out io.Writer) {
 		case "exit()":
 			fmt.Fprintln(out)
 			os.Exit(0)
-			return
 		default:
 			l := lexer.New(line)
 			p := parser.New(l)

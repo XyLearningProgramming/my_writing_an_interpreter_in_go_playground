@@ -18,18 +18,22 @@ const (
 	PREFIX      // -X or !X
 	PRODUCT     // *
 	CALL        // myFunction(X)
+	INDEX       // []
+	INDEXCOLON  // :
 )
 
 var InfixOperatorToPrecedences = map[my_ast.InfixOperator]PrecedenceLevel{
-	my_ast.INOP_MINUS:    SUM,
-	my_ast.INOP_PLUS:     SUM,
-	my_ast.INOP_ASTERISK: PRODUCT,
-	my_ast.INOP_SLASH:    PRODUCT,
-	my_ast.INOP_LT:       LESSGREATER,
-	my_ast.INOP_GT:       LESSGREATER,
-	my_ast.INOP_EQ:       EQUALS,
-	my_ast.INOP_NOT_EQ:   EQUALS,
-	my_ast.INOP_CALL:     CALL,
+	my_ast.INOP_MINUS:      SUM,
+	my_ast.INOP_PLUS:       SUM,
+	my_ast.INOP_ASTERISK:   PRODUCT,
+	my_ast.INOP_SLASH:      PRODUCT,
+	my_ast.INOP_LT:         LESSGREATER,
+	my_ast.INOP_GT:         LESSGREATER,
+	my_ast.INOP_EQ:         EQUALS,
+	my_ast.INOP_NOT_EQ:     EQUALS,
+	my_ast.INOP_CALL:       CALL,
+	my_ast.INOP_INDEX:      INDEX,
+	my_ast.INOP_INDEXCOLON: INDEXCOLON,
 }
 
 func tokenPrecedenceLevel(t *token.Token) PrecedenceLevel {
@@ -240,4 +244,109 @@ func (p *Parser) parseCallArguments() []my_ast.Expression {
 	}
 	p.nextToken()
 	return args
+}
+
+func (p *Parser) parseStringExpression() my_ast.Expression {
+	return &my_ast.StringExpression{
+		Value: p.curToken.Literal,
+	}
+}
+
+func (p *Parser) parseArrayExpression() my_ast.Expression {
+	return &my_ast.ArrayExpression{Elements: p.parseExpressionList(token.RBRACKET)}
+}
+
+func (p *Parser) parseExpressionList(end token.TokenType) []my_ast.Expression {
+	list := []my_ast.Expression{}
+	if p.isPeekToken(end) {
+		p.nextToken()
+		return list
+	}
+	p.nextToken()
+	list = append(list, p.parseExpression(LOWEST))
+	for p.isPeekToken(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		list = append(list, p.parseExpression(LOWEST))
+	}
+	if !p.isPeekToken(end) {
+		p.appendTokenError(end, p.peekToken)
+		return nil
+	}
+	p.nextToken()
+	return list
+}
+
+func (p *Parser) parseIndexExpression(left my_ast.Expression) my_ast.Expression {
+	exp := &my_ast.IndexExpression{
+		Left:            left,
+		StartIndex:      nil,
+		IsSetStartIndex: false,
+		EndIndex:        nil,
+		IsSetEndIndex:   false,
+		Stride:          nil,
+		IsSetStride:     false,
+	}
+	p.nextToken()
+	if p.isCurToken(token.RBRACKET) {
+		return exp
+	}
+	// parse start index to : or ]
+	if !p.isCurToken(token.COLON) {
+		startIdx := p.parseExpression(LOWEST)
+		if startIdx == nil {
+			return nil
+		}
+		exp.StartIndex = startIdx
+		exp.IsSetStartIndex = true
+		p.nextToken()
+	}
+	if p.isCurToken(token.RBRACKET) {
+		return exp
+	}
+	if !p.isCurToken(token.COLON) {
+		p.appendError(fmt.Sprintf("Expected : or ], but got: %s", p.curToken.Literal))
+		return nil
+	}
+	exp.IsSetStartIndex = true
+	exp.IsSetEndIndex = true
+	p.nextToken()
+	if p.isCurToken(token.RBRACKET) {
+		return exp
+	}
+	// parse end index to : or ]
+	if !p.isCurToken(token.COLON) {
+		endIdx := p.parseExpression(LOWEST)
+		if endIdx == nil {
+			return nil
+		}
+		exp.EndIndex = endIdx
+		exp.IsSetEndIndex = true
+		p.nextToken()
+	}
+	if p.isCurToken(token.RBRACKET) {
+		return exp
+	}
+	if !p.isCurToken(token.COLON) {
+		p.appendError(fmt.Sprintf("Expected : or ], but got: %s", p.curToken.Literal))
+		return nil
+	}
+
+	exp.IsSetStride = true
+	p.nextToken()
+	if p.isCurToken(token.RBRACKET) {
+		return exp
+	}
+	// parse stride to ]
+	stride := p.parseExpression(LOWEST)
+	if stride == nil {
+		return nil
+	}
+	exp.Stride = stride
+	p.nextToken()
+	if !p.isCurToken(token.RBRACKET) {
+		p.appendTokenError(token.RBRACKET, p.curToken)
+		return nil
+	}
+	return exp
 }

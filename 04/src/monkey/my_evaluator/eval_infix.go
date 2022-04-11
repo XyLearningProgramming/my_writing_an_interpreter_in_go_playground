@@ -72,6 +72,13 @@ func evalInfixNode(node *my_ast.InfixExpression, env *my_object.Environment) my_
 		}
 		// an error?
 		return newError("unknown operator: %s%s%s", leftObj.Type(), node.Operator, rightObj.Type())
+	case *my_object.String:
+		if rightObj, ok := rightObj.(*my_object.String); ok {
+			if node.Operator == "+" {
+				return &my_object.String{Value: leftObj.Value + rightObj.Value}
+			}
+		}
+		return newError("unknown operator: %s%s%s", leftObj.Type(), node.Operator, rightObj.Type())
 	default:
 		return newError("unknown operator: %s%s%s", leftObj.Type(), node.Operator, rightObj.Type())
 	}

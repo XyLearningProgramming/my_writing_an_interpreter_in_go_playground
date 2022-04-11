@@ -12,4 +12,5 @@ var (
 	TRUE_AS_ONE_FL   = &my_object.Float{Value: 1}
 	FALSE_AS_ZERO_FL = &my_object.Float{Value: 0}
 	NULL             = &my_object.Null{}
+	EMPTY_ARRAY = &my_object.Array{Elements:  []my_object.Object{}}
 )

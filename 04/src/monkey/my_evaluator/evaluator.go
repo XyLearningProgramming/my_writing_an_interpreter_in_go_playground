@@ -23,22 +23,25 @@ func Eval(node my_ast.Node, env *my_object.Environment) my_object.Object {
 			return val
 		}
 		env.Set(node.Ident.Value, val)
+		return nil
 	case *my_ast.CallExpression:
 		function := Eval(node.Function, env)
 		if isError(function) {
 			return function
 		}
-		functionObj, ok := function.(*my_object.Function)
-		if !ok {
+		args := evalExpressions(node.Arguments, env)
+		switch function := function.(type) {
+		case *my_object.Builtin:
+			return function.Fn(args...)
+		case *my_object.Function:
+			if len(args) == 1 && isError(args[0]) {
+				return args[0]
+			}
+			// extend env var now to create new set of bindings
+			return evalFunction(function, args)
+		default:
 			return newError("not a function: %s", function.Type())
 		}
-		args := evalArguments(node.Arguments, env)
-		if len(args) == 1 && isError(args[0]) {
-			return args[0]
-		}
-		// extend env var now to create new set of bindings
-		return evalFunction(functionObj, args)
-
 	case *my_ast.Function:
 		return &my_object.Function{Parameters: node.Parameters, Env: env, Body: node.Body}
 	case *my_ast.IfExpression:
@@ -58,6 +61,20 @@ func Eval(node my_ast.Node, env *my_object.Environment) my_object.Object {
 		return &my_object.Integer{Value: int64(node.Value)}
 	case *my_ast.Float:
 		return &my_object.Float{Value: node.Value}
+	case *my_ast.StringExpression:
+		return &my_object.String{Value: node.Value}
+	case *my_ast.ArrayExpression:
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+		return &my_object.Array{Elements: elements}
+	case *my_ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		return evalIndexExpression(left, node, env)
 	}
-	return nil
+	return newError("unknown node type: %s", node.String())
 }

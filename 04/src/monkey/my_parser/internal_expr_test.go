@@ -186,3 +186,43 @@ func TestParseCallExpression(t *testing.T) {
 	}
 	testStringedStatements(t, tests)
 }
+
+func TestStringLiteral(t *testing.T) {
+	input := `"Hello\tWorld!\n";`
+	l := lexer.New(input)
+	p := New(l)
+	prog := p.Parse()
+	assert.NotNil(t, prog)
+	assert.Nil(t, p.err)
+	assert.NotNil(t, prog.Statements)
+	assert.Equal(t, 1, len(prog.Statements))
+	es, eok := prog.Statements[0].(*my_ast.ExpressionStatement)
+	assert.True(t, eok)
+	ss, sok := es.Expression.(*my_ast.StringExpression)
+	assert.True(t, sok)
+	assert.Equal(t, `Hello\tWorld!\n`, ss.Value)
+}
+
+func TestParseArrayExpression(t *testing.T) {
+	tests := []TestWithExpect{
+		{"[1, 2*2, !false]", "[1,(2*2),(!false)];"},
+		{"[1, 2*2, !false] + [1]", "([1,(2*2),(!false)]+[1]);"},
+	}
+	testStringedStatements(t, tests)
+}
+
+func TestParseArrayIndexingExpression(t *testing.T) {
+	tests := []TestWithExpect{
+		{"[1+1][0]", "([(1+1)][0]);"},
+		{"[1][0:1]", "([1][0:1]);"},
+		{"[1][:1]", "([1][:1]);"},
+		{"[1][::1+1]", "([1][::(1+1)]);"},
+		{"[1][::]", "([1][::]);"},
+		{"[1][]", "([1][]);"},
+		{"[1][:]", "([1][:]);"},
+		{"[1][1::]", "([1][1::]);"},
+		{"[1][:1:]", "([1][:1:]);"},
+		{"a*[1,2,3,4][b*c]*d", "((a*([1,2,3,4][(b*c)]))*d);"},
+	}
+	testStringedStatements(t, tests)
+}

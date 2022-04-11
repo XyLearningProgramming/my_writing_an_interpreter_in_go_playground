@@ -17,6 +17,9 @@ const (
 	RETURN_VALUE_OBJ     = "RETURN_VALUE"
 	ERROR_OBJ            = "ERROR"
 	FUNCTION_OBJ         = "FUNCTION"
+	STRING_OBJ           = "STRING"
+	BUILTIN_OBJ          = "BUILTIN"
+	ARRAY_OBJ            = "ARRAY"
 )
 
 type Object interface {
@@ -115,4 +118,41 @@ func (f *Function) String() string {
 	sb.WriteString(")")
 	sb.WriteString(f.Body.String())
 	return sb.String()
+}
+
+type String struct {
+	Value string
+}
+
+func (s *String) Type() ObjectType { return STRING_OBJ }
+
+func (s *String) String() string {
+	// return "\"" + s.Value + "\""
+	return s.Value
+}
+
+type BuiltinFunction func(args ...Object) Object
+
+type Builtin struct {
+	Fn BuiltinFunction
+}
+
+func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
+
+func (b *Builtin) String() string {
+	return "builtin function"
+}
+
+type Array struct {
+	Elements []Object
+}
+
+func (a *Array) Type() ObjectType { return ARRAY_OBJ }
+
+func (a *Array) String() string {
+	elements := []string{}
+	for _, e := range a.Elements {
+		elements = append(elements, e.String())
+	}
+	return "[" + strings.Join(elements, ",") + "]"
 }

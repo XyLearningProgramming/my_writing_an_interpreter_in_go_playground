@@ -31,3 +31,31 @@ func (l *Lexer) readNumberWithDot() *token.Token {
 		}
 	}
 }
+
+func (l *Lexer) readString(startQuote byte) string {
+	sb := &strings.Builder{}
+	for {
+		l.readChar()
+		if l.ch == startQuote || l.ch == 0 {
+			break
+		}
+		// all back slash rules go here
+		switch l.ch {
+		case '\\':
+			l.readChar()
+			switch l.ch {
+			case 'r':
+				sb.WriteByte('\r')
+			case 't':
+				sb.WriteByte('\t')
+			case 'n':
+				sb.WriteByte('\n')
+			default:
+				sb.WriteByte(l.ch)
+			}
+			continue
+		}
+		sb.WriteByte(l.ch)
+	}
+	return sb.String()
+}

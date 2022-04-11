@@ -197,15 +197,17 @@ func (p *PrefixExpression) String() string {
 type InfixOperator string
 
 const (
-	INOP_MINUS    InfixOperator = token.MINUS
-	INOP_PLUS     InfixOperator = token.PLUS
-	INOP_ASTERISK InfixOperator = token.ASTERISK
-	INOP_SLASH    InfixOperator = token.SLASH
-	INOP_LT       InfixOperator = token.LT
-	INOP_GT       InfixOperator = token.GT
-	INOP_EQ       InfixOperator = token.EQ
-	INOP_NOT_EQ   InfixOperator = token.NOT_EQ
-	INOP_CALL     InfixOperator = token.LPAREN
+	INOP_MINUS      InfixOperator = token.MINUS
+	INOP_PLUS       InfixOperator = token.PLUS
+	INOP_ASTERISK   InfixOperator = token.ASTERISK
+	INOP_SLASH      InfixOperator = token.SLASH
+	INOP_LT         InfixOperator = token.LT
+	INOP_GT         InfixOperator = token.GT
+	INOP_EQ         InfixOperator = token.EQ
+	INOP_NOT_EQ     InfixOperator = token.NOT_EQ
+	INOP_CALL       InfixOperator = token.LPAREN
+	INOP_INDEX      InfixOperator = token.LBRACKET
+	INOP_INDEXCOLON InfixOperator = token.COLON
 )
 
 type InfixExpression struct {
@@ -343,3 +345,69 @@ func (c *CallExpression) String() string {
 	sb.WriteRune(')')
 	return sb.String()
 }
+
+type StringExpression struct {
+	Value string
+}
+
+func (sl *StringExpression) DebugString() string { return sl.Value }
+
+func (sl *StringExpression) String() string { return sl.Value }
+
+func (sl *StringExpression) expressionNode() {}
+
+type ArrayExpression struct {
+	Elements []Expression
+}
+
+func (ae *ArrayExpression) DebugString() string {
+	return ae.String()
+}
+
+func (ae *ArrayExpression) String() string {
+	elements := []string{}
+	for _, el := range ae.Elements {
+		elements = append(elements, el.String())
+	}
+	return "[" + strings.Join(elements, ",") + "]"
+}
+
+func (ae *ArrayExpression) expressionNode() {}
+
+type IndexExpression struct {
+	Left            Expression
+	StartIndex      Expression // value specified by user for start index
+	IsSetStartIndex bool       // if start index is set when 1. user specified a colon : 2. user specified a value explicitly
+	EndIndex        Expression
+	IsSetEndIndex   bool
+	Stride          Expression
+	IsSetStride     bool
+}
+
+func (aie *IndexExpression) DebugString() string { return aie.String() }
+
+func (aie *IndexExpression) String() string {
+	sb := &strings.Builder{}
+	sb.WriteRune('(')
+	sb.WriteString(aie.Left.String())
+	sb.WriteRune('[')
+	if aie.StartIndex != nil {
+		sb.WriteString(aie.StartIndex.String())
+	}
+	if aie.IsSetEndIndex {
+		sb.WriteRune(':')
+		if aie.EndIndex != nil {
+			sb.WriteString(aie.EndIndex.String())
+		}
+	}
+	if aie.IsSetStride {
+		sb.WriteRune(':')
+		if aie.Stride != nil {
+			sb.WriteString(aie.Stride.String())
+		}
+	}
+	sb.WriteString("])")
+	return sb.String()
+}
+
+func (aie *IndexExpression) expressionNode() {}

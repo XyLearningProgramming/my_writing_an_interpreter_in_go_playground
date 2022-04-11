@@ -5,7 +5,7 @@ import (
 	"monkey/my_object"
 )
 
-func evalArguments(exps []my_ast.Expression, env *my_object.Environment) []my_object.Object {
+func evalExpressions(exps []my_ast.Expression, env *my_object.Environment) []my_object.Object {
 	args := []my_object.Object{}
 	for _, e := range exps {
 		evaluated := Eval(e, env)
