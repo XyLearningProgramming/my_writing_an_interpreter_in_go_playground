@@ -5,6 +5,7 @@
 
 ### What's Done
 
+- A __repl__ enabling backspace, history tracing, `exit()` command
 - String literals now can start with either ' or "
 - String literals now support backslash escaping; for instance, literals like below will work
 
